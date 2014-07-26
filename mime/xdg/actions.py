@@ -4,6 +4,7 @@ http://www.freedesktop.org/wiki/Specifications/mime-actions-spec
 """
 
 from . import xdg
+from ConfigParser import NoSectionError
 
 ADDED_ASSOCIATIONS = "Added Associations"
 REMOVED_ASSOCIATIONS = "Removed Associations"
@@ -24,25 +25,28 @@ class ActionsFile(xdg.IniFile):
 
 	def _parseAssociations(self, key):
 		from .mime import MimeType
-		d = self.keys[key]
-
-		for mime, apps in self.cfg.items(key):
-			# First, check for aliases and unalias anything we find
-			# see http://lists.freedesktop.org/archives/xdg/2010-March/011336.html
-			alias = MimeType(mime).aliasOf()
-			if alias:
-				mime = alias
-
-			if mime not in d:
-				d[mime] = []
-			assert apps.endswith(";"), apps
-			apps = apps.split(";")
-			for app in apps:
-				if not app:
-					# We either got two semicolons in a row
-					# or we got the last semicolon
-					continue
-				d[mime].insert(0, app)
+		d = self.keys[key];
+    
+		try:
+				for mime, apps in self.cfg.items(key):
+					# First, check for aliases and unalias anything we find
+					# see http://lists.freedesktop.org/archives/xdg/2010-March/011336.html
+					alias = MimeType(mime).aliasOf()
+					if alias:
+						mime = alias
+		
+					if mime not in d:
+						d[mime] = []
+					assert apps.endswith(";"), apps
+					apps = apps.split(";")
+					for app in apps:
+						if not app:
+							# We either got two semicolons in a row
+							# or we got the last semicolon
+							continue
+						d[mime].insert(0, app)
+		except NoSectionError:
+				pass
 
 	def parseKeys(self):
 		self._parseAssociations(ADDED_ASSOCIATIONS)
